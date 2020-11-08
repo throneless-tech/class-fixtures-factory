@@ -44,7 +44,6 @@ export class FixtureFactory {
     maxDepth: 4,
   };
   private options!: FactoryOptions;
-  private depthness: string[] = [];
   private loggers: FactoryLogger[] = [];
   private assigner: Assigner = this.defaultAssigner.bind(this);
   //private cvAdapter = new ClassValidatorAdapter();
@@ -143,8 +142,6 @@ export class FixtureFactory {
     let propsToIgnore: string[] = [];
     let userInput: DeepPartial<T> = {};
 
-    this.depthness = [];
-
     const result: FactoryResult<InstanceType<T>> = {
       one: () => {
         let error = false;
@@ -192,15 +189,15 @@ export class FixtureFactory {
   protected _make(
     meta: ClassMetadata,
     classType: Class,
-    propsToIgnore: string[] = []
+    propsToIgnore: string[] = [],
+    depth: number = 0
   ) {
-    this.depthness.push(classType.name);
-
     const object = new classType();
     for (const prop of meta.properties) {
+      if (depth >= this.options.maxDepth) continue;
       if (propsToIgnore.includes(prop.name)) continue;
       if (this.shouldIgnoreProperty(prop)) continue;
-      this.assigner(prop, object, this.makeProperty(prop, meta));
+      this.assigner(prop, object, this.makeProperty(prop, meta, depth + 1));
     }
     return object;
   }
@@ -211,7 +208,7 @@ export class FixtureFactory {
     return false;
   }
 
-  protected makeProperty(prop: PropertyMetadata, meta: ClassMetadata): any {
+  protected makeProperty(prop: PropertyMetadata, meta: ClassMetadata, depth: number): any {
     if (prop.input) {
       this.logger().onCustomProp(prop);
       return prop.input();
@@ -221,9 +218,9 @@ export class FixtureFactory {
       this.logger().onNormalProp(prop, value);
       return value;
     } else if (prop.array) {
-      return this.makeArrayProp(prop, meta);
+      return this.makeArrayProp(prop, meta, depth);
     }
-    return this.makeObjectProp(meta, prop);
+    return this.makeObjectProp(meta, prop, depth);
   }
 
   protected makeScalarProperty(prop: PropertyMetadata) {
@@ -247,7 +244,7 @@ export class FixtureFactory {
     throw new Error(`Can't generate a value for this scalar`);
   }
 
-  private makeArrayProp(prop: PropertyMetadata, meta: ClassMetadata) {
+  private makeArrayProp(prop: PropertyMetadata, meta: ClassMetadata, depth: number) {
     const amount = faker.random.number({
       max: prop.max,
       min: prop.min,
@@ -260,7 +257,8 @@ export class FixtureFactory {
             array: false,
             scalar: true,
           },
-          meta
+          meta,
+          depth
         )
       );
     }
@@ -270,12 +268,13 @@ export class FixtureFactory {
           ...prop,
           array: false,
         },
-        meta
+        meta,
+        depth
       )
     );
   }
 
-  private makeObjectProp(meta: ClassMetadata, prop: PropertyMetadata) {
+  private makeObjectProp(meta: ClassMetadata, prop: PropertyMetadata, depth: number) {
     const refClassMeta = this.store.get(prop.type);
     const props = this.findRefSideProps(meta, prop);
 
@@ -285,7 +284,8 @@ export class FixtureFactory {
     const value = this._make(
       refClassMeta,
       this.classTypes[prop.type],
-      props.map(p => p.name)
+      props.map(p => p.name),
+      depth
     );
 
     oldLogger.onClassPropDone(prop, logger);
