@@ -194,7 +194,6 @@ export class FixtureFactory {
   ) {
     const object = new classType();
     for (const prop of meta.properties) {
-      if (this.options.maxDepth && depth >= this.options.maxDepth) continue;
       if (propsToIgnore.includes(prop.name)) continue;
       if (this.shouldIgnoreProperty(prop)) continue;
       this.assigner(prop, object, this.makeProperty(prop, meta, depth + 1));
@@ -257,6 +256,7 @@ export class FixtureFactory {
       max: prop.max,
       min: prop.min,
     });
+    if (this.options.maxDepth && depth >= this.options.maxDepth) return [];
     if (['string', 'number', 'boolean', 'Date'].includes(prop.type)) {
       return [...Array(amount).keys()].map(() =>
         this.makeProperty(
