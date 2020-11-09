@@ -636,8 +636,6 @@ var FixtureFactory = /** @class */ (function () {
         try {
             for (var _b = tslib.__values(meta.properties), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var prop = _c.value;
-                if (this.options.maxDepth && depth >= this.options.maxDepth)
-                    continue;
                 if (propsToIgnore.includes(prop.name))
                     continue;
                 if (this.shouldIgnoreProperty(prop))
@@ -699,6 +697,8 @@ var FixtureFactory = /** @class */ (function () {
             max: prop.max,
             min: prop.min,
         });
+        if (this.options.maxDepth && depth >= this.options.maxDepth)
+            return [];
         if (['string', 'number', 'boolean', 'Date'].includes(prop.type)) {
             return tslib.__spread(Array(amount).keys()).map(function () {
                 return _this.makeProperty(tslib.__assign(tslib.__assign({}, prop), { array: false, scalar: true }), meta, depth);
