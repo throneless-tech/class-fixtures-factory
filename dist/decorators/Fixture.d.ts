@@ -6,6 +6,7 @@ export declare type FixtureOptions = string | ((faker?: Faker.FakerStatic) => st
     min?: number;
     max?: number;
     get?: ((faker?: Faker.FakerStatic) => string | undefined) | (() => any);
+    optional?: boolean;
 };
 /**
  * Decorator for providing metadata about a property

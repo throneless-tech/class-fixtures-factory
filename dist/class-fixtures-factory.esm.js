@@ -340,6 +340,7 @@ var DefaultMetadataStore = /** @class */ (function (_super) {
                 meta.input = decorator.get;
                 meta.min = decorator.min || 1;
                 meta.max = decorator.max || 3;
+                meta.optional = decorator.optional || false;
                 var inputType = (_a = decorator.type) === null || _a === void 0 ? void 0 : _a.call(decorator);
                 if (inputType) {
                     if (Array.isArray(inputType)) {
@@ -706,7 +707,13 @@ var FixtureFactory = /** @class */ (function () {
         var props = this.findRefSideProps(meta, prop);
         var oldLogger = this.logger();
         var logger = this.newLogger(refClassMeta);
-        var value = this._make(refClassMeta, this.classTypes[prop.type], props.map(function (p) { return p.name; }), depth);
+        var value;
+        if (!this.options.maxDepth ||
+            !(this.options.maxDepth &&
+                depth >= this.options.maxDepth &&
+                prop.optional)) {
+            value = this._make(refClassMeta, this.classTypes[prop.type], props.map(function (p) { return p.name; }), depth);
+        }
         oldLogger.onClassPropDone(prop, logger);
         this.disposeLogger();
         return value;
