@@ -15,6 +15,7 @@ export interface PropertyMetadata {
   ignore?: boolean;
   min?: number;
   max?: number;
+  optional?: boolean;
   input?: (...args: any[]) => any;
 }
 

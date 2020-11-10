@@ -11,6 +11,7 @@ export type FixtureOptions =
       min?: number;
       max?: number;
       get?: ((faker?: Faker.FakerStatic) => string | undefined) | (() => any);
+      optional?: boolean;
     };
 
 /**

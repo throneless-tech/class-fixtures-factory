@@ -293,12 +293,22 @@ export class FixtureFactory {
     const oldLogger = this.logger();
     const logger = this.newLogger(refClassMeta);
 
-    const value = this._make(
-      refClassMeta,
-      this.classTypes[prop.type],
-      props.map(p => p.name),
-      depth
-    );
+    let value;
+    if (
+      !this.options.maxDepth ||
+      !(
+        this.options.maxDepth &&
+        depth >= this.options.maxDepth &&
+        prop.optional
+      )
+    ) {
+      value = this._make(
+        refClassMeta,
+        this.classTypes[prop.type],
+        props.map(p => p.name),
+        depth
+      );
+    }
 
     oldLogger.onClassPropDone(prop, logger);
     this.disposeLogger();

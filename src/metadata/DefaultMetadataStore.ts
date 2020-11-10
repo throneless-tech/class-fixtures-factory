@@ -66,6 +66,7 @@ export class DefaultMetadataStore extends BaseMetadataStore {
         meta.input = decorator.get;
         meta.min = decorator.min || 1;
         meta.max = decorator.max || 3;
+        meta.optional = decorator.optional || false;
         let inputType: any = decorator.type?.();
         if (inputType) {
           if (Array.isArray(inputType)) {
