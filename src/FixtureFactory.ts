@@ -295,9 +295,12 @@ export class FixtureFactory {
 
     let value;
     if (
-      this.options.maxDepth &&
-      depth >= this.options.maxDepth &&
-      prop.optional
+      !this.options.maxDepth ||
+      !(
+        this.options.maxDepth &&
+        depth >= this.options.maxDepth &&
+        prop.optional
+      )
     ) {
       value = this._make(
         refClassMeta,
