@@ -260,7 +260,7 @@ var ClassValidatorAdapter = /** @class */ (function () {
             }
         }
         if (!prop.type) {
-            throw new Error("Couldn't extract the type of \"" + cvMeta.propertyName + "\". Use @Fixture({ type: () => Foo })");
+            return null;
         }
         return prop;
     };
@@ -285,19 +285,29 @@ var DefaultMetadataStore = /** @class */ (function (_super) {
         var _this = this;
         var rMetadata = reflect(classType);
         var cvMetadata = this.cvAdapter.extractMedatada(classType);
+        var unknownTypes = new Set();
         var properties = rMetadata.properties
             .map(function (prop) { return _this.makePropertyMetadata(prop); })
             .filter(Boolean);
         var _loop_1 = function (cvMeta) {
-            var existing = properties.find(function (prop) { return prop.name === cvMeta.propertyName; });
-            var deduced = this_1.cvAdapter.makePropertyMetadata(cvMeta, existing);
-            if (existing) {
-                properties = properties.map(function (prop) {
-                    return prop.name === cvMeta.propertyName ? deduced : existing;
-                });
+            var existingProp = properties.find(function (prop) { return prop.name === cvMeta.propertyName; });
+            var deducedProp = this_1.cvAdapter.makePropertyMetadata(cvMeta, existingProp);
+            if (deducedProp) {
+                if (existingProp) {
+                    properties = properties.map(function (prop) {
+                        return prop.name === cvMeta.propertyName ? deducedProp : existingProp;
+                    });
+                }
+                else {
+                    properties.push(deducedProp);
+                }
+                unknownTypes["delete"](cvMeta.propertyName);
             }
             else {
-                properties.push(deduced);
+                var typeResolved = !!properties.find(function (v) { return v.name === cvMeta.propertyName && !!v.type; });
+                if (!typeResolved) {
+                    unknownTypes.add(cvMeta.propertyName);
+                }
             }
         };
         var this_1 = this;
@@ -313,6 +323,10 @@ var DefaultMetadataStore = /** @class */ (function (_super) {
                 if (cvMetadata_1_1 && !cvMetadata_1_1.done && (_a = cvMetadata_1["return"])) _a.call(cvMetadata_1);
             }
             finally { if (e_1) throw e_1.error; }
+        }
+        if (unknownTypes.size > 0) {
+            throw new Error("Couldn't extract the type of " + __spread(unknownTypes).map(function (v) { return "\"" + v + "\""; })
+                .join(', ') + ". Use @Fixture({ type: () => Foo })");
         }
         var classMetadata = {
             name: rMetadata.name,
